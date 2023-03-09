@@ -1,0 +1,1 @@
+A learning project, to clone the tree command from Linux. Demonstrates file system mastery, terminal output, and CLI.
