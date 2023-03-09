@@ -1,5 +1,5 @@
 """A clone of the Linux command 'tree'"""
-__version__ = '0.0.3'
+__version__ = '0.0.4'
 
 from pathlib import Path
 
@@ -11,10 +11,14 @@ SPACE_PREFIX = "    "
 def print_dir(directory: Path, indent=""):
     # Hide hidden items by default
     items = [item for item in directory.iterdir() if item.name[0] != '.']
+    # Alphabetize
+    items = sorted(items)
+    # Differentiate the last item
     num_of_items = len(items)
     for index, item in enumerate(items):
         last = (index == num_of_items - 1)
         print(f"{indent}{ELBOW if last else TEE} {item.name}")
+        # Print directories recursivly
         if item.is_dir():
             print_dir(item, 
              indent= indent + (SPACE_PREFIX if last else PIPE_PREFIX))
