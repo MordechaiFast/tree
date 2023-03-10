@@ -1,6 +1,8 @@
 """A clone of the Linux command 'tree'"""
-__version__ = '0.0.5'
+__version__ = '0.1.0'
 
+import sys
+import argparse
 from pathlib import Path
 
 TEE          = "├──"
@@ -9,6 +11,15 @@ PIPE_PREFIX  = "│   "
 SPACE_PREFIX = "    "
 
 dir_count, file_count = 0, 0
+
+def parse_args(args):
+    parser = argparse.ArgumentParser(
+        prog='tree',
+        description="A clone of the Linux command 'tree'",
+    )
+    parser.version = 'tree v' + __version__
+    parser.add_argument("-v", "--version", action="version")
+    return parser.parse_args(args)
 
 def print_dir(directory: Path, indent=""):
     # Use the total count of directories and files
@@ -30,6 +41,7 @@ def print_dir(directory: Path, indent=""):
         elif item.is_file():
             file_count += 1
 
+parse_args(sys.argv[1:])
 print('.')
 print_dir(Path.cwd())
 print(f'\n{dir_count} directories, {file_count} files')
