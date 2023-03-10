@@ -1,5 +1,5 @@
 """A clone of the Linux command 'tree'"""
-__version__ = '0.1.0'
+__version__ = '0.1.1'
 
 import sys
 import argparse
@@ -17,8 +17,14 @@ def parse_args(args):
         prog='tree',
         description="A clone of the Linux command 'tree'",
     )
-    parser.version = 'tree v' + __version__
+    parser.version = f'tree v{__version__} 2023 by Mordechai Fast'
     parser.add_argument("-v", "--version", action="version")
+    parser.add_argument(
+        "dir_list",
+        metavar='<directory list>',
+        nargs='*',
+        default='.',
+    )
     return parser.parse_args(args)
 
 def print_dir(directory: Path, indent=""):
@@ -41,7 +47,8 @@ def print_dir(directory: Path, indent=""):
         elif item.is_file():
             file_count += 1
 
-parse_args(sys.argv[1:])
-print('.')
-print_dir(Path.cwd())
+args = parse_args(sys.argv[1:])
+for directory in args.dir_list:
+    print(directory)
+    print_dir(Path(directory))
 print(f'\n{dir_count} directories, {file_count} files')
