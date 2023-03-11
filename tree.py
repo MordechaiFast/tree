@@ -1,5 +1,5 @@
 """A clone of the Linux command 'tree'"""
-__version__ = '0.1.2'
+__version__ = '0.1.3'
 
 import sys
 import argparse
@@ -50,8 +50,12 @@ def print_dir(directory: Path, indent=""):
 def main(args):
     args = parse_args(args)
     for directory in args.dir_list:
-        print(directory)
-        print_dir(Path(directory))
+        directory = Path(directory)
+        if directory.is_dir():
+            print(directory)
+            print_dir(directory)
+        else:
+            print(directory, "[error opening dir]")
     print(f'\n{dir_count} directories, {file_count} files')
 
 if __name__ == '__main__':
