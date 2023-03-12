@@ -1,6 +1,8 @@
 """A clone of the Linux command 'tree'"""
-__version__ = '0.0.7'
+__version__ = '0.1.5'
 
+import sys
+import argparse
 from pathlib import Path
 
 TEE          = "├──"
@@ -14,7 +16,22 @@ def color(text) -> str:
     """Returns the object's string in bold blue"""
     return f'\033[94m\033[1m{str(text)}\033[0m'
 
-def print_dir(directory: Path, indent=""):
+def parse_args(args):
+    parser = argparse.ArgumentParser(
+        prog=f'python {args[0]}',
+        description="A clone of the Linux command 'tree'",
+    )
+    parser.version = f'tree v{__version__} 2023 by Mordechai Fast'
+    parser.add_argument("-v", "--version", action="version")
+    parser.add_argument(
+        "dir_list",
+        metavar='<directory list>',
+        nargs='*',
+        default='.',
+    )
+    return parser.parse_args(args[1:])
+
+def print_dir(directory: Path, indent="") -> None:
     # Use the total count of directories and files
     global dir_count, file_count
     # Hide hidden items by default
@@ -40,6 +57,16 @@ def report() -> None:
     file_label = 'file' if file_count == 1 else 'files'
     print(f'\n{dir_count} {dir_label}, {file_count} {file_label}')
 
-print(color('.'))
-print_dir(Path.cwd())
-report()
+def main(args):
+    args = parse_args(args)
+    for directory in args.dir_list:
+        directory = Path(directory)
+        if directory.is_dir():
+            print(color(directory))
+            print_dir(directory)
+        else:
+            print(directory, "[error opening dir]")
+    report()
+
+if __name__ == '__main__':
+    main(sys.argv)
