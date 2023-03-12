@@ -1,5 +1,5 @@
 """A clone of the Linux command 'tree'"""
-__version__ = '0.0.6'
+__version__ = '0.0.7'
 
 from pathlib import Path
 
@@ -35,6 +35,11 @@ def print_dir(directory: Path, indent=""):
             file_count += 1
             print(f"{indent}{ELBOW if last else TEE} {item.name}")
 
+def report() -> None:
+    dir_label = 'directory' if dir_count == 1 else 'directories'
+    file_label = 'file' if file_count == 1 else 'files'
+    print(f'\n{dir_count} {dir_label}, {file_count} {file_label}')
+
 print(color('.'))
 print_dir(Path.cwd())
-print(f'\n{dir_count} directories, {file_count} files')
+report()
