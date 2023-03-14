@@ -16,19 +16,19 @@ def main(args: list):
         sort=not args.unsort
     )
     for directory in args.dir_list:
-        tree.root(Path(directory))
+        tree.trunk(Path(directory))
     tree.report()
 
 def parse_args(args: list) -> argparse.Namespace:
     """Parse the comand-line arguments."""
     parser = argparse.ArgumentParser(
-        #prog=f'python {args[0]}',
+        prog=f'python -m tree',
         description="A clone of the Linux command 'tree'",
     )
     parser.version = f'tree v{__version__} 2023 by Mordechai Fast'
     parser.add_argument("-v", "--version", action="version")
     parser.add_argument(
-        "dir_list",
+        dest="dir_list",
         metavar='<directory list>',
         help="The directories to be listed",
         nargs='*',

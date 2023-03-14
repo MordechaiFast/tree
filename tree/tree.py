@@ -30,7 +30,7 @@ class Tree():
         self.dirs = dirs
         self.sort = sort
 
-    def root(self, directory: Path) -> None:
+    def trunk(self, directory: Path) -> None:
         """Checks that the given path is a directory, prints its name 
         in bold blue, and prints the directory tree.
         """
@@ -54,7 +54,7 @@ class Tree():
             items = [item for item in items if item.is_dir()]
         if self.sort:
             # Alphabetize
-            items = sorted(items)
+            items = sorted(items, key=lambda item: item.name.lower())
         return items
 
     def print_dir(self, directory: Path, indent="") -> None:
