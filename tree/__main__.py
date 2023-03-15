@@ -1,11 +1,10 @@
-#! /usr/bin/python
 """A clone of the Linux command 'tree'"""
 __version__ = '0.2.0'
 
 import sys
 import argparse
-from pathlib import Path
-from .tree import Tree
+from .tree_class import Tree
+from . import view
 
 def main(args: list):
     """Work with the command-line input and output"""
@@ -16,8 +15,10 @@ def main(args: list):
         sort=not args.unsort
     )
     for directory in args.dir_list:
-        tree.trunk(Path(directory))
+        tree.trunk(directory)
     tree.report()
+    view.grafic_print(tree)
+
 
 def parse_args(args: list) -> argparse.Namespace:
     """Parse the comand-line arguments."""
