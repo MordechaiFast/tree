@@ -1,18 +1,10 @@
-"""The model/veiwer class for the tree"""
+"""The model class for the tree"""
+__version__ = '0.3.0'
 
 from pathlib import Path
 
-TEE          = "├──"
-ELBOW        = "└──"
-PIPE_PREFIX  = "│   "
-SPACE_PREFIX = "    "
-
-def color(text) -> str:
-    """Returns the object's string in bold blue"""
-    return f'\033[94m\033[1m{str(text)}\033[0m'
-
 class Tree():
-    """Model and viewer for directory trees.
+    """Model for directory trees.
     
     Saves the settings from the command-line type input, processes 
     the directory data into a tree, and reports the directory count 
@@ -24,23 +16,39 @@ class Tree():
         - sort -- Alphabetize the files/directories list
     """
     def __init__(self, hide=True, dirs=False, sort=True) -> None:
+        # The tree itself
+        self.listing = []
         # Use the total count of directories and files
         self.dir_count, self.file_count = 0, 0
+        # Save comand-line preferences
         self.hide = hide
         self.dirs = dirs
         self.sort = sort
 
     def trunk(self, directory: Path) -> None:
-        """Checks that the given path is a directory, prints its name 
-        in bold blue, and prints the directory tree.
+        """Checks that the given path is a directory, and adds its 
+        contents to the directory tree.
         """
+        directory = Path(directory)
         if directory.is_dir():
-            print(color(directory))
-            self.print_dir(directory)
+            self.listing.append(self._branch(directory))
         else:
-            print(directory, "[error opening dir]")
+            self.listing.append(f'{directory} [error opening dir]')
 
-    def prepare_list(self, directory: Path) -> list:
+    def _branch(self, directory: Path) -> list:
+        """Prints the tree for a single directory or subdirectory."""
+        branch_list = [directory.name or '.']
+        contents = self._prepare_list(directory)
+        for item in contents:
+            if item.is_dir():
+                self.dir_count += 1
+                branch_list.append(self._branch(item))
+            elif item.is_file():
+                self.file_count += 1
+                branch_list.append(item.name)
+        return branch_list
+
+    def _prepare_list(self, directory: Path) -> list:
         """Filters and sorts the list of items in a directory 
         according the the command-line settings.
         """
@@ -57,29 +65,14 @@ class Tree():
             items = sorted(items, key=lambda item: item.name.lower())
         return items
 
-    def print_dir(self, directory: Path, indent="") -> None:
-        """Prints the tree for a single directory or subdirectory."""
-        items = self.prepare_list(directory)
-        # Differentiate the last item
-        max_index = len(items) - 1
-        for index, item in enumerate(items):
-            last = (index == max_index)
-            # Print directories recursivly
-            if item.is_dir():
-                self.dir_count += 1
-                print(f"{indent}{ELBOW if last else TEE} {color(item.name)}")
-                self.print_dir(item, 
-                    indent= indent + (SPACE_PREFIX if last else PIPE_PREFIX))
-            elif item.is_file():
-                self.file_count += 1
-                print(f"{indent}{ELBOW if last else TEE} {item.name}")
-
     def report(self) -> None:
-        """Prints the directory count and the file count."""
+        """Puts the directory count and the file count at the end of 
+        the tree.
+        """
         dir_label = 'directory' if self.dir_count == 1 else 'directories'
         file_label = 'file' if self.file_count == 1 else 'files'
         if self.dirs:
-            print(f'\n{self.dir_count} {dir_label}')
+            self.listing.append(f'\n{self.dir_count} {dir_label}')
         else:
-            print(f'\n{self.dir_count} {dir_label}, '
+            self.listing.append(f'\n{self.dir_count} {dir_label}, '
                   f'{self.file_count} {file_label}')
