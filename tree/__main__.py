@@ -4,7 +4,6 @@ __version__ = '0.2.0'
 
 import sys
 import argparse
-from pathlib import Path
 from .tree import Tree
 
 def main(args: list):
@@ -16,7 +15,7 @@ def main(args: list):
         sort=not args.unsort
     )
     for directory in args.dir_list:
-        tree.trunk(Path(directory))
+        tree.trunk(directory)
     tree.report()
 
 def parse_args(args: list) -> argparse.Namespace:

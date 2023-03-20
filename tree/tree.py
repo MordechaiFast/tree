@@ -1,5 +1,6 @@
 """The model/veiwer class for the tree"""
 
+import os
 from pathlib import Path
 
 TEE          = "├──"
@@ -7,9 +8,12 @@ ELBOW        = "└──"
 PIPE_PREFIX  = "│   "
 SPACE_PREFIX = "    "
 
-def color(text) -> str:
-    """Returns the object's string in bold blue"""
-    return f'\033[94m\033[1m{str(text)}\033[0m'
+def color(text, color='blue') -> str:
+    """Returns the object's string in bold of the specified color."""
+    color_code = {'blue': 94, 'green': 92}[color]
+    return f'\033[{color_code}m\033[1m{str(text)}\033[0m'
+
+is_exec = lambda file: os.access(file, os.X_OK)
 
 class Tree():
     """Model and viewer for directory trees.
@@ -34,6 +38,7 @@ class Tree():
         """Checks that the given path is a directory, prints its name 
         in bold blue, and prints the directory tree.
         """
+        directory = Path(directory)
         if directory.is_dir():
             print(color(directory))
             self.print_dir(directory)
@@ -67,12 +72,17 @@ class Tree():
             # Print directories recursivly
             if item.is_dir():
                 self.dir_count += 1
-                print(f"{indent}{ELBOW if last else TEE} {color(item.name)}")
+                print(f"{indent}{ELBOW if last else TEE} "
+                      f"{color(item.name, 'blue')}")
                 self.print_dir(item, 
                     indent= indent + (SPACE_PREFIX if last else PIPE_PREFIX))
             elif item.is_file():
                 self.file_count += 1
-                print(f"{indent}{ELBOW if last else TEE} {item.name}")
+                if is_exec(item):
+                    print(f"{indent}{ELBOW if last else TEE} "
+                          f"{color(item.name, 'green')}")
+                else:
+                    print(f"{indent}{ELBOW if last else TEE} {item.name}")
 
     def report(self) -> None:
         """Prints the directory count and the file count."""
