@@ -12,12 +12,15 @@ def main(args: list):
     tree = Tree(
         hide=not args.show,
         dirs=args.dirs,
+        mode=args.protections,
+        size=args.size,
         sort=not args.unsort,
         reverse=args.reverse,
     )
     for directory in args.dir_list:
         tree.trunk(directory)
-    tree.report()
+    if not args.noreport:
+        tree.report()
 
 def parse_args(args: list) -> argparse.Namespace:
     """Parse the comand-line arguments."""
@@ -47,6 +50,18 @@ def parse_args(args: list) -> argparse.Namespace:
         help="List directories only.",
     )
     parser.add_argument(
+        '-p',
+        dest='protections',
+        action='store_true',
+        help='Print the protections for each file.',
+    )
+    parser.add_argument(
+        '-s',
+        dest='size',
+        action='store_true',
+        help='Print the size in bytes of each file.'
+    )
+    parser.add_argument(
         '-U',
         dest='unsort',
         action='store_true',
@@ -57,6 +72,11 @@ def parse_args(args: list) -> argparse.Namespace:
         dest='reverse',
         action='store_true',
         help='Reverse the order of the sort.',
+    )
+    parser.add_argument(
+        '--noreport',
+        action='store_true',
+        help='Turn off file/directory count at end of tree listing.'
     )
     return parser.parse_args(args[1:])
 
