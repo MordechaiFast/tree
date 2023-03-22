@@ -1,4 +1,5 @@
 """The model/veiwer class for the tree"""
+__version__ = '0.2.1'
 
 import os
 from pathlib import Path
@@ -27,12 +28,13 @@ class Tree():
         - dirs -- List directories only
         - sort -- Alphabetize the files/directories list
     """
-    def __init__(self, hide=True, dirs=False, sort=True) -> None:
+    def __init__(self, hide=True, dirs=False, sort=True, reverse =False) -> None:
         # Use the total count of directories and files
         self.dir_count, self.file_count = 0, 0
         self.hide = hide
         self.dirs = dirs
         self.sort = sort
+        self.reverse = reverse
 
     def trunk(self, directory: Path) -> None:
         """Checks that the given path is a directory, prints its name 
@@ -60,6 +62,8 @@ class Tree():
         if self.sort:
             # Alphabetize
             items = sorted(items, key=lambda item: item.name.lower())
+        if self.reverse:
+            items.reverse()
         return items
 
     def print_dir(self, directory: Path, indent="") -> None:

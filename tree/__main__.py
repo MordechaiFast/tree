@@ -1,6 +1,6 @@
 #! /usr/bin/python
 """A clone of the Linux command 'tree'"""
-__version__ = '0.2.0'
+__version__ = '0.2.1'
 
 import sys
 import argparse
@@ -12,7 +12,8 @@ def main(args: list):
     tree = Tree(
         hide=not args.show,
         dirs=args.dirs,
-        sort=not args.unsort
+        sort=not args.unsort,
+        reverse=args.reverse,
     )
     for directory in args.dir_list:
         tree.trunk(directory)
@@ -50,6 +51,12 @@ def parse_args(args: list) -> argparse.Namespace:
         dest='unsort',
         action='store_true',
         help="Leave files unsorted.",
+    )
+    parser.add_argument(
+        '-r',
+        dest='reverse',
+        action='store_true',
+        help='Reverse the order of the sort.',
     )
     return parser.parse_args(args[1:])
 
