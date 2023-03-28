@@ -1,9 +1,9 @@
 """The model/veiwer class for the tree"""
-__version__ = '0.2.1'
+__version__ = '0.2.2'
 
-import os
-import stat
+import os, stat
 from pathlib import Path
+from datetime import datetime
 
 TEE          = "├──"
 ELBOW        = "└──"
@@ -26,27 +26,47 @@ class Tree():
     and the file count.
 
     Keyword Arguments:
-        - hide -- Hide hidden files, whose name begins with "."
-        - dirs -- List directories only
-        - mode -- Displays the mode code for the files/directories
-        - size -- Displays the size of the file/directory in bytes
-        - sort -- Alphabetize the files/directories list
+        - hide  -- Hide hidden files, whose name begins with "."
+        - dirs  -- List directories only
+        - inode -- Displays the inode code for the file/directory
+        - dev   -- Displays the device code
+        - mode  -- Displays the mode code for the file/directory
+        - owner -- Displays the file/directory owner
+        - group -- Displays the file/directory owner group
+        - size  -- Displays the size of the file/directory in bytes
+        - units -- Displays the size in kilobytes, megabytes, etc.
+        - date  -- Displays the date and time, by default of modification
+        - chrono -- Sorts the files/directories by modification time
+        - sort  -- Alphabetize the files/directories list
         - reverse -- List the directory contents in reverse order
     """
     def __init__(self, 
         hide=True,
         dirs=False,
+        inode=False,
+        dev=False,
         mode=False,
+        owner=False,
+        group=False,
         size=False,
+        units=False,
+        date=False,
+        chrono=False,
         sort=True,
         reverse=False,
     ) -> None:
-        # Use the total count of directories and files
         self.dir_count, self.file_count = 0, 0
         self.hide = hide
         self.dirs = dirs
+        self.inode = inode
+        self.dev = dev
         self.mode = mode
+        self.owner = owner
+        self.group = group
         self.size = size
+        self.units = units
+        self.date = date
+        self.chrono = chrono
         self.sort = sort
         self.reverse = reverse
 
@@ -61,7 +81,7 @@ class Tree():
         else:
             print(directory, "[error opening dir]")
 
-    def prepare_list(self, directory: Path) -> list:
+    def _prepare_list(self, directory: Path) -> list:
         """Filters and sorts the list of items in a directory 
         according the the command-line settings.
         """
@@ -73,45 +93,78 @@ class Tree():
         if self.dirs:
             # List directories only
             items = [item for item in items if item.is_dir()]
-        if self.sort:
+        if self.chrono:
+            items = sorted(items, key=lambda item: item.stat().st_mtime)
+        elif self.sort:
             # Alphabetize
             items = sorted(items, key=lambda item: item.name.lower())
         if self.reverse:
             items.reverse()
         return items
 
-    def item_stats(self, file: Path) -> str:
+    def _item_stats(self, file: Path) -> str:
         stats = []
+        item_stat = file.stat()
+        if self.inode:
+            stats.append(f'{item_stat.st_ino}')
+        if self.dev:
+            stats.append(f'{item_stat.st_dev:3}')
         if self.mode:
-            stats.append(stat.filemode(file.stat().st_mode))
-        if self.size:
-            stats.append(f'{file.stat().st_size:11}')
+            stats.append(stat.filemode(item_stat.st_mode))
+        if self.owner:
+            stats.append(file.owner())
+        if self.group:
+            stats.append(file.group())
+        if self.units:
+            size = item_stat.st_size
+            if   size > 1024**3:
+                size = size / 1024**3
+                designation = 'G'
+            elif size > 1024**2:
+                size = size / 1024**2
+                designation = 'M'
+            elif size > 1024:
+                size = size / 1024
+                designation = 'K'
+            else:
+                designation = ''
+            if size < 100:
+                size = f'{size:.1f}{designation}'
+            else:
+                size = f'{size:.0f}{designation}'
+            stats.append(f'{size:>5}')
+        elif self.size:
+            stats.append(f'{item_stat.st_size:11}')
+        if self.date:
+            mtime = datetime.fromtimestamp(item_stat.st_mtime)
+            stats.append(f"{mtime.strftime('%b')} {mtime.day:>2} "
+                         f"{mtime.hour:02}:{mtime.minute:02}")
         if stats != []:
-            stats = '[' + ' '.join(stats) + ']  '
-        return stats
+            return '[' + ' '.join(stats) + ']  '
+        else:
+            return ''
 
     def print_dir(self, directory: Path, indent="") -> None:
         """Prints the tree for a single directory or subdirectory."""
-        items = self.prepare_list(directory)
+        items = self._prepare_list(directory)
         # Differentiate the last item
         max_index = len(items) - 1
         for index, item in enumerate(items):
             last = (index == max_index)
-            stats = self.item_stats(item)
+            stats = self._item_stats(item)
+            prefix = f"{indent}{ELBOW if last else TEE} {stats}"
             # Print directories recursivly
             if item.is_dir():
                 self.dir_count += 1
-                print(f"{indent}{ELBOW if last else TEE} {stats}"
-                      f"{color(item.name, 'blue')}")
+                print(f"{prefix}{color(item.name, 'blue')}")
                 self.print_dir(item, 
                     indent= indent + (SPACE_PREFIX if last else PIPE_PREFIX))
             elif item.is_file():
                 self.file_count += 1
                 if is_exec(item):
-                    print(f"{indent}{ELBOW if last else TEE} {stats}"
-                          f"{color(item.name, 'green')}")
+                    print(f"{prefix}{color(item.name, 'green')}")
                 else:
-                    print(f"{indent}{ELBOW if last else TEE} {stats}{item.name}")
+                    print(f"{prefix}{item.name}")
 
     def report(self) -> None:
         """Prints the directory count and the file count."""

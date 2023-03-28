@@ -1,6 +1,6 @@
 #! /usr/bin/python
 """A clone of the Linux command 'tree'"""
-__version__ = '0.2.1'
+__version__ = '0.2.2'
 
 import sys
 import argparse
@@ -12,8 +12,15 @@ def main(args: list):
     tree = Tree(
         hide=not args.show,
         dirs=args.dirs,
+        inode=args.inodes,
+        dev=args.device,
         mode=args.protections,
+        owner=args.UID,
+        group=args.GID,
         size=args.size,
+        units=args.human,
+        date=args.date,
+        chrono=args.time,
         sort=not args.unsort,
         reverse=args.reverse,
     )
@@ -27,9 +34,9 @@ def parse_args(args: list) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         prog=f'python -m tree',
         description="A clone of the Linux command 'tree'",
+        add_help=False,
     )
     parser.version = f'tree v{__version__} 2023 by Mordechai Fast'
-    parser.add_argument("-v", "--version", action="version")
     parser.add_argument(
         dest="dir_list",
         metavar='<directory list>',
@@ -56,10 +63,50 @@ def parse_args(args: list) -> argparse.Namespace:
         help='Print the protections for each file.',
     )
     parser.add_argument(
+        '-u',
+        dest='UID',
+        action='store_true',
+        help='Displays file owner or UID number.',
+    )
+    parser.add_argument(
+        '-g',
+        dest='GID',
+        action='store_true',
+        help='Displays file group owner or GID number.',
+    )
+    parser.add_argument(
         '-s',
         dest='size',
         action='store_true',
         help='Print the size in bytes of each file.'
+    )
+    parser.add_argument(
+        '-h',
+        dest='human',
+        action='store_true',
+        help='Print the size in a more human readable way.',
+    )
+    parser.add_argument(
+        '-D',
+        dest='date',
+        action='store_true',
+        help='Print the date of last modification.',
+    )
+    parser.add_argument(
+        '--inodes',
+        action='store_true',
+        help='Print inode number of each file.',
+    )
+    parser.add_argument(
+        '--device',
+        action='store_true',
+        help='Print device ID number to which each file belongs.'
+    )
+    parser.add_argument(
+        '-t',
+        dest='time',
+        action='store_true',
+        help='Sort files by last modification time.',
     )
     parser.add_argument(
         '-U',
@@ -76,7 +123,13 @@ def parse_args(args: list) -> argparse.Namespace:
     parser.add_argument(
         '--noreport',
         action='store_true',
-        help='Turn off file/directory count at end of tree listing.'
+        help='Turn off file/directory count at end of tree listing.',
+    )
+    parser.add_argument("-v", "--version", action="version")
+    parser.add_argument(
+        '--help',
+        action='help',
+        help='show this help message and exit'
     )
     return parser.parse_args(args[1:])
 
