@@ -3,7 +3,7 @@ __version__ = '0.2.2'
 
 import os, stat
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timedelta
 
 TEE          = "├──"
 ELBOW        = "└──"
@@ -36,6 +36,8 @@ class Tree():
         - size  -- Displays the size of the file/directory in bytes
         - units -- Displays the size in kilobytes, megabytes, etc.
         - date  -- Displays the date and time, by default of modification
+        - classify -- Appends / to the end of a directory name 
+                   and * to an executable
         - chrono -- Sorts the files/directories by modification time
         - sort  -- Alphabetize the files/directories list
         - reverse -- List the directory contents in reverse order
@@ -51,6 +53,7 @@ class Tree():
         size=False,
         units=False,
         date=False,
+        classify=False,
         chrono=False,
         sort=True,
         reverse=False,
@@ -66,6 +69,7 @@ class Tree():
         self.size = size
         self.units = units
         self.date = date
+        self.classify = classify
         self.chrono = chrono
         self.sort = sort
         self.reverse = reverse
@@ -128,7 +132,7 @@ class Tree():
                 designation = 'K'
             else:
                 designation = ''
-            if size < 100:
+            if size < 10:
                 size = f'{size:.1f}{designation}'
             else:
                 size = f'{size:.0f}{designation}'
@@ -137,8 +141,12 @@ class Tree():
             stats.append(f'{item_stat.st_size:11}')
         if self.date:
             mtime = datetime.fromtimestamp(item_stat.st_mtime)
-            stats.append(f"{mtime.strftime('%b')} {mtime.day:>2} "
-                         f"{mtime.hour:02}:{mtime.minute:02}")
+            if datetime.now() - mtime < timedelta(days=365):
+                stats.append(f"{mtime.strftime('%b')} {mtime.day:>2} "
+                             f"{mtime.hour:02}:{mtime.minute:02}")
+            else:
+                stats.append(f"{mtime.strftime('%b')} {mtime.day:>2} "
+                             f"{mtime.year:>5}")
         if stats != []:
             return '[' + ' '.join(stats) + ']  '
         else:
@@ -156,13 +164,21 @@ class Tree():
             # Print directories recursivly
             if item.is_dir():
                 self.dir_count += 1
-                print(f"{prefix}{color(item.name, 'blue')}")
+                if self.classify:
+                    name = item.name + "/"
+                else:
+                    name = item.name
+                print(f"{prefix}{color(name, 'blue')}")
                 self.print_dir(item, 
                     indent= indent + (SPACE_PREFIX if last else PIPE_PREFIX))
             elif item.is_file():
                 self.file_count += 1
                 if is_exec(item):
-                    print(f"{prefix}{color(item.name, 'green')}")
+                    if self.classify:
+                        name = item.name + "*"
+                    else:
+                        name = item.name 
+                    print(f"{prefix}{color(name, 'green')}")
                 else:
                     print(f"{prefix}{item.name}")
 
